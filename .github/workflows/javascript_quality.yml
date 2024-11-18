@@ -1,4 +1,4 @@
-name: ESLint Code Quality Report
+name: Code Quality (JaVAscript)
 
 on:
   push:
@@ -25,34 +25,32 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        # Install ESLint as a dev dependency
-        npm install eslint --save-dev
+        # Install ESLint and eslint-formatter-html as development dependencies
+        npm install eslint eslint-formatter-html --save-dev
 
-    - name: Create ESLint Configuration File
+        # Create a lint script in package.json if it doesn't exist
+        if ! grep -q '"lint":' package.json; then
+          jq '.scripts += {"lint": "eslint \"**/*.js\""}' package.json > temp.json && mv temp.json package.json
+        fi
+
+    - name: Create ESLint Config File
       run: |
-        # Create the new eslint.config.js file for ESLint v9+ (Native flat config)
-        cat > eslint.config.js <<EOL
-        module.exports = [
+        # Create the eslint.config.js file with custom content
+        echo 'module.exports = [
           {
-            extends: ['eslint:recommended'],
-            env: {
-              browser: true,
-              node: true,
-              es2021: true,
-            },
+            files: ["**/*.js"], 
+            ignores: ["coverage/"],
             rules: {
-              'no-unused-vars': 'warn',
-              'no-console': 'warn',
-            },
-          },
-        ];
-        EOL
-        cat eslint.config.js  # Display the created config file for debugging
+              "no-unused-vars": "warn",
+              "no-console": "off"
+            }
+          }
+        ];' > eslint.config.js
 
     - name: Run ESLint and Generate HTML Report
       run: |
-        # Directly run ESLint and output to an HTML file
-        npx eslint '**/*.js' --format html --output-file eslint-report.html || {
+        # Run ESLint using the "lint" script and output to an HTML file
+        npm run lint -- --config eslint.config.js --format html --output-file eslint-report.html || {
           echo "ESLint failed. Printing debug info...";
           exit 1;
         }
