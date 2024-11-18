@@ -32,10 +32,20 @@ jobs:
         run: |
           npm install -g jest  # Install Jest globally
 
+      - name: Create Jest config file dynamically
+        run: |
+          echo "module.exports = {
+            roots: ['<rootDir>/'],
+            testMatch: ['**/*.js'],  # Match JavaScript files in your repo
+            collectCoverage: true,
+            coverageDirectory: 'coverage',
+            coverageReporters: ['html', 'text', 'lcov']
+          };" > jest.config.js
+
       - name: Run tests with coverage
         run: |
-          # Run Jest with coverage and other configurations
-          jest --coverage --passWithNoTests --coverageDirectory=coverage --coverageReporters=html,text,lcov
+          # Run Jest with coverage and the dynamically created config file
+          jest --config=jest.config.js --coverage --passWithNoTests --coverageDirectory=coverage --coverageReporters=html,text,lcov
 
       - name: Upload Coverage report
         uses: actions/upload-artifact@v3
