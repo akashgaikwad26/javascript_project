@@ -55,8 +55,8 @@ jobs:
 
     - name: Run ESLint and Generate HTML Report
       run: |
-        # Run ESLint using the "lint" script and output to an HTML file
-        npm run lint -- --format html --output-file eslint-report.html || {
+        # Directly run ESLint and output to an HTML file
+        npx eslint '**/*.js' --format html --output-file eslint-report.html || {
           echo "ESLint failed. Printing debug info...";
           exit 1;
         }
