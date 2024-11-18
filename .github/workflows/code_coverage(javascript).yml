@@ -36,7 +36,7 @@ jobs:
         run: |
           echo "module.exports = {
             roots: ['<rootDir>/'],
-            testMatch: ['**/*.js'],  # Match JavaScript files in your repo
+            testMatch: ['**/*.js'],
             collectCoverage: true,
             coverageDirectory: 'coverage',
             coverageReporters: ['html', 'text', 'lcov']
