@@ -1,0 +1,42 @@
+name: Code Coverage (Javascript)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.js'
+      
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**/*.js'
+
+jobs:
+  test:
+    name: Run Tests and Upload Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests with coverage
+        run: npm test -- --passWithNoTests --coverage
+
+      - name: Upload Coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: jest-coverage-report
+          path: coverage/
+
+      - name: Clean up coverage directory
+        run: rm -rf coverage/
