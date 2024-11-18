@@ -30,26 +30,26 @@ jobs:
 
     - name: Create ESLint Configuration File
       run: |
-        # Create the new eslint.config.js file for ESLint v9+
+        # Create the new eslint.config.js file for ESLint v9+ using flat config format
         cat > eslint.config.js <<EOL
-        module.exports = {
-          env: {
+        import { FlatCompat } from 'eslint-define-config';
+
+        const compat = new FlatCompat();
+
+        export default [
+          compat.extends('eslint:recommended'),
+          compat.env({
             browser: true,
             node: true,
             es2021: true
-          },
-          extends: [
-            'eslint:recommended'
-          ],
-          parserOptions: {
-            ecmaVersion: 12,
-            sourceType: 'module'
-          },
-          rules: {
-            'no-unused-vars': 'warn',
-            'no-console': 'warn'
+          }),
+          {
+            rules: {
+              'no-unused-vars': 'warn',
+              'no-console': 'warn',
+            }
           }
-        };
+        ];
         EOL
         cat eslint.config.js  # Display the created config file for debugging
 
