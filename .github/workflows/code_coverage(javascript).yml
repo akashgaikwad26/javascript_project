@@ -36,7 +36,7 @@ jobs:
         run: |
           echo "module.exports = {
             roots: ['<rootDir>/'],
-            testMatch: ['**/*.js'],
+            testMatch: ['**/*.test.js'],  # Adjust this if your tests have a different naming convention
             collectCoverage: true,
             coverageDirectory: 'coverage',
             coverageReporters: ['html', 'text', 'lcov']
