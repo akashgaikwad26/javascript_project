@@ -1,0 +1,48 @@
+name: Code Quality (JaVAscript)
+
+on:
+  push:
+    paths:
+      - '**/*.js'
+  pull_request:
+    paths:
+      - '**/*.js'
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Run ESLint and Generate HTML Report
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install Dependencies
+      run: |
+        # Install ESLint and eslint-formatter-html as development dependencies
+        npm install eslint eslint-formatter-html --save-dev
+
+        # Create a lint script in package.json if it doesn't exist
+        if ! grep -q '"lint":' package.json; then
+          jq '.scripts += {"lint": "eslint \"**/*.js\""}' package.json > temp.json && mv temp.json package.json
+        fi
+
+    - name: Run ESLint and Generate HTML Report
+      run: |
+        # Run ESLint using the "lint" script and output to an HTML file
+        npm run lint -- --format html --output-file eslint-report.html || {
+          echo "ESLint failed. Printing debug info...";
+          exit 1;
+        }
+
+    - name: Upload ESLint HTML Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: eslint-html-report
+        path: eslint-report.html
