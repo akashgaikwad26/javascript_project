@@ -45,7 +45,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           # Run Jest with coverage and the dynamically created config file
-          jest --config=jest.config.js --coverage --passWithNoTests --coverageDirectory=coverage --coverageReporters=html,text,lcov
+          jest --config=jest.config.js --coverage --passWithNoTests --coverageDirectory=coverage 
 
       - name: Upload Coverage report
         uses: actions/upload-artifact@v3
