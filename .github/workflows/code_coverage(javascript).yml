@@ -12,8 +12,8 @@ on:
       - main
     paths:
       - '**/*.js'
-  workflow_dispatch: 
 
+  workflow_dispatch:  # This allows manual triggering of the workflow
 
 jobs:
   test:
@@ -28,16 +28,14 @@ jobs:
         with:
           node-version: '14'
 
-      - name: Install dependencies
+      - name: Install Jest globally
         run: |
-          # Install Jest as a dev dependency along with other dependencies
-          npm install jest --save-dev
-          npm install
+          npm install -g jest  # Install Jest globally
 
       - name: Run tests with coverage
         run: |
-          # Run Jest directly with inline configuration
-          npm test -- --coverage --passWithNoTests --coverageDirectory=coverage --coverageReporters=html,text,lcov
+          # Run Jest with coverage and other configurations
+          jest --coverage --passWithNoTests --coverageDirectory=coverage --coverageReporters=html,text,lcov
 
       - name: Upload Coverage report
         uses: actions/upload-artifact@v3
