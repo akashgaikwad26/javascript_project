@@ -36,10 +36,10 @@ jobs:
         run: |
           echo "module.exports = {
             roots: ['<rootDir>/'],
-            testMatch: ['**/*.test.js'], 
+            testMatch: ['**/*.test.js'],  
             collectCoverage: true,
             coverageDirectory: 'coverage',
-            coverageReporters: ['html', 'text', 'lcov']
+            coverageReporters: ['html', 'text', 'lcov'] 
           };" > jest.config.js
 
       - name: Run tests with coverage
@@ -51,7 +51,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: jest-coverage-report
-          path: coverage/  # Uploads the coverage folder
+          path: coverage/
 
       - name: Clean up coverage directory
-        run: rm -rf coverage/  # Remove coverage directory after upload
+        run: rm -rf coverage/  
