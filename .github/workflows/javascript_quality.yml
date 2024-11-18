@@ -30,13 +30,13 @@ jobs:
 
     - name: Create ESLint Configuration File
       run: |
-        # Create the new eslint.config.js file for ESLint v9+ using flat config format
+        # Create the new eslint.config.js file for ESLint v9+ using flat config format (CommonJS)
         cat > eslint.config.js <<EOL
-        import { FlatCompat } from 'eslint-define-config';
-
+        const { FlatCompat } = require('eslint-define-config');
+        
         const compat = new FlatCompat();
-
-        export default [
+        
+        module.exports = [
           compat.extends('eslint:recommended'),
           compat.env({
             browser: true,
