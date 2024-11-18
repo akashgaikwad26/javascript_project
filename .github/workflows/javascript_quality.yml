@@ -1,4 +1,4 @@
-name:Code Quality Report(javascript)
+name: ESLint Code Quality Report
 
 on:
   push:
@@ -32,9 +32,7 @@ jobs:
       run: |
         # Create the new eslint.config.js file for ESLint v9+
         cat > eslint.config.js <<EOL
-        import { defineConfig } from 'eslint';
-
-        export default defineConfig({
+        module.exports = {
           env: {
             browser: true,
             node: true,
@@ -51,7 +49,7 @@ jobs:
             'no-unused-vars': 'warn',
             'no-console': 'warn'
           }
-        });
+        };
         EOL
         cat eslint.config.js  # Display the created config file for debugging
 
