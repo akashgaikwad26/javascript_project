@@ -19,24 +19,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3  # Use the latest version (v3)
 
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3  # Updated to v3
         with:
           node-version: '14'
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          # Install Jest as a dev dependency along with other dependencies
+          npm install jest --save-dev
+          npm install
 
       - name: Run tests with coverage
-        run: npm test -- --passWithNoTests --coverage
+        run: |
+          # Run Jest directly with inline configuration
+          npm test -- --coverage --passWithNoTests --coverageDirectory=coverage --coverageReporters=html,text,lcov
 
       - name: Upload Coverage report
         uses: actions/upload-artifact@v3
         with:
           name: jest-coverage-report
-          path: coverage/
+          path: coverage/  # Uploads the coverage folder
 
       - name: Clean up coverage directory
-        run: rm -rf coverage/
+        run: rm -rf coverage/  # Remove coverage directory after upload
