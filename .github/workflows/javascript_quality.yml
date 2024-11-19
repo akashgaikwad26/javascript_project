@@ -58,5 +58,5 @@ jobs:
     - name: Upload ESLint HTML Report
       uses: actions/upload-artifact@v3
       with:
-        name: eslint-html-report
+        name: Javascript_Quality
         path: eslint-report.html
