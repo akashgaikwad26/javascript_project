@@ -1,81 +1,35 @@
-name: Code Quality (JaVAscript)
-
-on:
-  push:
-    paths:
-      - '**/*.js'
-  pull_request:
-    paths:
-      - '**/*.js'
-  workflow_dispatch:
-
-jobs:
-  lint:
-    name: Run ESLint and Generate HTML Report
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-
-    - name: Install Dependencies
-      run: |
-        # Install ESLint and eslint-formatter-html as development dependencies
-        npm install eslint eslint-formatter-html --save-dev
-
-        # Create a lint script in package.json if it doesn't exist
-        if ! grep -q '"lint":' package.json; then
-          jq '.scripts += {"lint": "eslint \"**/*.js\""}' package.json > temp.json && mv temp.json package.json
-        fi
-
-    - name: Create ESLint Config File
-      run: |
-        # Create the eslint.config.js file with custom content
-        echo 'module.exports = [
-          {
-            files: ["**/*.js"], 
-            ignores: ["coverage/"],
-            rules: {
-              "no-unused-vars": "warn",
-              "no-console": "off"
-            }
-          }
-        ];' > eslint.config.js
-
-    - name: Run ESLint and Generate HTML Report
-      run: |
-        # Run ESLint using the "lint" script and output to an HTML file
-        npm run lint -- --config eslint.config.js --format html --output-file eslint-report.html || {
-          echo "ESLint failed. Printing debug info...";
-          exit 1;
-        }
-
     - name: Create `docs/` Folder and Replace User Folder with New Report
       run: |
-        # Get the GitHub username from the current context
-        USERNAME=$(echo $GITHUB_ACTOR)
+        # Set a custom username instead of using GITHUB_ACTOR
+        USERNAME="custom-username"
 
         # Define the path for the user's folder in the docs directory
         DOCS_FOLDER="docs/$USERNAME"
-        
+
         # Create the docs directory if it doesn't exist
         mkdir -p "$DOCS_FOLDER"
         
         # Move the newly generated ESLint report to the user's folder in docs/
-        mv eslint-report.html "$DOCS_FOLDER/"
+        if [ -f "eslint-report.html" ]; then
+          mv eslint-report.html "$DOCS_FOLDER/"
+        else
+          echo "ESLint report not found. Exiting."
+          exit 1
+        fi
 
     - name: Commit and Push Updated Report to GitHub Pages
       run: |
         # Add and commit the updated report to the repository
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
-        git add docs/$USERNAME/eslint-report.html
-        git commit -m "Update ESLint report for $USERNAME"
         
-        # Push the changes to the repository
-        git push origin main --force
+        # Add the file if it exists
+        if [ -f "docs/$USERNAME/eslint-report.html" ]; then
+          git add docs/$USERNAME/eslint-report.html
+          git commit -m "Update ESLint report for $USERNAME"
+          
+          # Push the changes to the repository
+          git push origin main --force
+        else
+          echo "No report to commit. Skipping."
+        fi
