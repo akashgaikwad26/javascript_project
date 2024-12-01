@@ -55,8 +55,27 @@ jobs:
           exit 1;
         }
 
-    - name: Upload ESLint HTML Report
-      uses: actions/upload-artifact@v3
-      with:
-        name: Javascript_Quality
-        path: eslint-report.html
+    - name: Create `docs/` Folder and Replace User Folder with New Report
+      run: |
+        # Get the GitHub username from the current context
+        USERNAME=$(echo $GITHUB_ACTOR)
+
+        # Define the path for the user's folder in the docs directory
+        DOCS_FOLDER="docs/$USERNAME"
+        
+        # Create the docs directory if it doesn't exist
+        mkdir -p "$DOCS_FOLDER"
+        
+        # Move the newly generated ESLint report to the user's folder in docs/
+        mv eslint-report.html "$DOCS_FOLDER/"
+
+    - name: Commit and Push Updated Report to GitHub Pages
+      run: |
+        # Add and commit the updated report to the repository
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add docs/$USERNAME/eslint-report.html
+        git commit -m "Update ESLint report for $USERNAME"
+        
+        # Push the changes to the repository
+        git push origin main --force
