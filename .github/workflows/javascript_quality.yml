@@ -57,7 +57,7 @@ jobs:
 
       
 
-   - name: Replace User Folder with New Report
+    - name: Replace User Folder with New Report
         run: |
           # Get the GitHub username from the current context
           USERNAME=$(echo $GITHUB_ACTOR)
