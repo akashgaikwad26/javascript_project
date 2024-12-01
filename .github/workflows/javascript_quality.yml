@@ -1,7 +1,63 @@
+name: Code Quality (JavaScript)
+
+on:
+  push:
+    paths:
+      - '**/*.js'
+  pull_request:
+    paths:
+      - '**/*.js'
+  workflow_dispatch:
+    inputs:
+      custom_username:
+        description: "Custom username for ESLint report"
+        required: false
+
+jobs:
+  lint:
+    name: Run ESLint and Generate HTML Report
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install Dependencies
+      run: |
+        npm install eslint eslint-formatter-html --save-dev
+        if ! grep -q '"lint":' package.json; then
+          jq '.scripts += {"lint": "eslint \"**/*.js\""}' package.json > temp.json && mv temp.json package.json
+        fi
+
+    - name: Create ESLint Config File
+      run: |
+        echo 'module.exports = [
+          {
+            files: ["**/*.js"], 
+            ignores: ["coverage/"],
+            rules: {
+              "no-unused-vars": "warn",
+              "no-console": "off"
+            }
+          }
+        ];' > eslint.config.js
+
+    - name: Run ESLint and Generate HTML Report
+      run: |
+        npm run lint -- --config eslint.config.js --format html --output-file eslint-report.html || {
+          echo "ESLint failed. Printing debug info...";
+          exit 1;
+        }
+
     - name: Create `docs/` Folder and Replace User Folder with New Report
       run: |
-        # Set a custom username instead of using GITHUB_ACTOR
-        USERNAME="custom-username"
+        # Use a custom username from workflow inputs, or default to "default-user"
+        USERNAME="${{ github.event.inputs.custom_username || 'default-user' }}"
 
         # Define the path for the user's folder in the docs directory
         DOCS_FOLDER="docs/$USERNAME"
@@ -19,11 +75,10 @@
 
     - name: Commit and Push Updated Report to GitHub Pages
       run: |
-        # Add and commit the updated report to the repository
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
-        
-        # Add the file if it exists
+
+        # Add and commit the updated report to the repository
         if [ -f "docs/$USERNAME/eslint-report.html" ]; then
           git add docs/$USERNAME/eslint-report.html
           git commit -m "Update ESLint report for $USERNAME"
