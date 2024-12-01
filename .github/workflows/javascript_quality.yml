@@ -73,15 +73,21 @@ jobs:
           exit 1
         fi
 
+    - name: Upload ESLint Report as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: eslint-report
+        path: docs/${{ github.event.inputs.custom_username || 'default-user' }}/eslint-report.html
+
     - name: Commit and Push Updated Report to GitHub Pages
       run: |
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
 
         # Add and commit the updated report to the repository
-        if [ -f "docs/$USERNAME/eslint-report.html" ]; then
-          git add docs/$USERNAME/eslint-report.html
-          git commit -m "Update ESLint report for $USERNAME"
+        if [ -f "docs/${{ github.event.inputs.custom_username || 'default-user' }}/eslint-report.html" ]; then
+          git add docs/${{ github.event.inputs.custom_username || 'default-user' }}/eslint-report.html
+          git commit -m "Update ESLint report for ${{ github.event.inputs.custom_username || 'default-user' }}"
           
           # Push the changes to the repository
           git push origin main --force
