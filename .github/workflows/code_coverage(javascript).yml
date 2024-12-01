@@ -1,4 +1,4 @@
-name: Code Coverage (Javascript)
+name: Code Coverage (JavaScript)
 
 on:
   push:
@@ -6,14 +6,14 @@ on:
       - main
     paths:
       - '**/*.js'
-      
+
   pull_request:
     branches:
       - main
     paths:
       - '**/*.js'
 
-  workflow_dispatch:  # This allows manual triggering of the workflow
+  workflow_dispatch:  # Allows manual triggering of the workflow
 
 jobs:
   test:
@@ -21,37 +21,79 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3  # Use the latest version (v3)
+        uses: actions/checkout@v3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3  # Updated to v3
+        uses: actions/setup-node@v3
         with:
           node-version: '14'
 
       - name: Install Jest globally
         run: |
-          npm install -g jest  # Install Jest globally
+          npm install -g jest
 
       - name: Create Jest config file dynamically
         run: |
           echo "module.exports = {
             roots: ['<rootDir>/'],
-            testMatch: ['**/*.test.js'],  
+            testMatch: ['**/*.test.js'],
             collectCoverage: true,
             coverageDirectory: 'coverage',
-            coverageReporters: ['html', 'text', 'lcov'] 
+            coverageReporters: ['html', 'text', 'lcov']
           };" > jest.config.js
 
       - name: Run tests with coverage
         run: |
-          # Run Jest with coverage and the dynamically created config file
-          jest --config=jest.config.js --coverage --passWithNoTests --coverageDirectory=coverage 
+          # Run Jest with coverage and dynamically created config file
+          jest --config=jest.config.js --coverage --passWithNoTests --coverageDirectory=coverage
 
-      - name: Upload Coverage report
+      - name: Move coverage reports to docs/
+        run: |
+          # Use a custom username from workflow inputs or default to "default-user"
+          USERNAME="${{ github.event.inputs.custom_username || 'default-user' }}"
+          
+          # Define the path for the user's folder in the docs directory
+          DOCS_FOLDER="docs/$USERNAME"
+
+          # Create the docs folder if it doesn't exist
+          mkdir -p "$DOCS_FOLDER"
+
+          # Move the entire coverage folder (including all generated reports) to the docs folder
+          mv coverage/* "$DOCS_FOLDER/"
+
+      - name: Generate Index HTML for Coverage Reports
+        run: |
+          # Define the username and target folder
+          USERNAME="${{ github.event.inputs.custom_username || 'default-user' }}"
+          DOCS_FOLDER="docs/$USERNAME"
+
+          # Create an index.html file with links to all files in the coverage folder
+          echo "<html><body><h1>Coverage Reports for $USERNAME</h1><ul>" > "$DOCS_FOLDER/index.html"
+          for file in "$DOCS_FOLDER"/*; do
+            filename=$(basename "$file")
+            echo "<li><a href=\"$filename\">$filename</a></li>" >> "$DOCS_FOLDER/index.html"
+          done
+          echo "</ul></body></html>" >> "$DOCS_FOLDER/index.html"
+
+      - name: Upload Coverage Reports as Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: Javascript_coverage
-          path: coverage/
+          name: coverage-reports
+          path: docs/${{ github.event.inputs.custom_username || 'default-user' }}/
+
+      - name: Commit and Push Coverage Reports to GitHub Pages
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          # Add and commit the entire folder
+          git add docs/${{ github.event.inputs.custom_username || 'default-user' }}/
+          git commit -m "Update coverage reports for ${{ github.event.inputs.custom_username || 'default-user' }}"
+
+          # Push the changes to GitHub Pages
+          git push https://x-access-token:${GH_PAT}@github.com/${{ github.repository }} main --force
 
       - name: Clean up coverage directory
-        run: rm -rf coverage/  
+        run: rm -rf coverage/
