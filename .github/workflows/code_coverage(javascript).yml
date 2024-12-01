@@ -61,20 +61,6 @@ jobs:
           # Move the entire coverage folder (including all generated reports) to the docs folder
           mv coverage/* "$DOCS_FOLDER/"
 
-      - name: Generate Index HTML for Coverage Reports
-        run: |
-          # Define the username and target folder
-          USERNAME="${{ github.event.inputs.custom_username || 'default-user' }}"
-          DOCS_FOLDER="docs/$USERNAME"
-
-          # Create an index.html file with links to all files in the coverage folder
-          echo "<html><body><h1>Coverage Reports for $USERNAME</h1><ul>" > "$DOCS_FOLDER/index.html"
-          for file in "$DOCS_FOLDER"/*; do
-            filename=$(basename "$file")
-            echo "<li><a href=\"$filename\">$filename</a></li>" >> "$DOCS_FOLDER/index.html"
-          done
-          echo "</ul></body></html>" >> "$DOCS_FOLDER/index.html"
-
       - name: Upload Coverage Reports as Artifact
         uses: actions/upload-artifact@v3
         with:
