@@ -15,7 +15,7 @@ on:
 
 jobs:
   lint:
-    name: Run ESLint and Generate HTML Report
+    name: Run ESLint and Generate Quality Report
     runs-on: ubuntu-latest
 
     steps:
@@ -47,25 +47,42 @@ jobs:
           }
         ];' > eslint.config.js
 
-    - name: Run ESLint and Generate HTML Report
+    - name: Run ESLint and Generate Report
       run: |
-        npm run lint -- --config eslint.config.js --format html --output-file eslint-report.html || {
+        npm run lint -- --config eslint.config.js --format json --output-file eslint-report.json || {
           echo "ESLint failed. Printing debug info...";
           exit 1;
         }
 
+    - name: Calculate Quality Score
+      id: calculate_score
+      run: |
+        # Extract convention errors and statement counts from the ESLint JSON report
+        ERROR_COUNT=$(jq '[.[] | .messages | length] | add' eslint-report.json)
+        STATEMENT_COUNT=$(grep -o ";" **/*.js | wc -l)
+
+        # Avoid division by zero
+        if [ "$STATEMENT_COUNT" -eq 0 ]; then
+          echo "No statements found in the codebase. Setting quality score to 0."
+          QUALITY_SCORE=0
+        else
+          QUALITY_SCORE=$(awk "BEGIN {printf \"%.2f\", 10.0 - ((5 * $ERROR_COUNT / $STATEMENT_COUNT) * 10)}")
+        fi
+
+        echo "Quality Score: $QUALITY_SCORE"
+        echo "quality_score=$QUALITY_SCORE" >> $GITHUB_ENV
+
+    - name: Append Quality Score to HTML Report
+      run: |
+        QUALITY_SCORE=${{ env.quality_score }}
+        echo "<h2>Quality Score: $QUALITY_SCORE</h2>" >> eslint-report.html
+
     - name: Create `docs/` Folder and Replace User Folder with New Report
       run: |
-        # Use a custom username from workflow inputs, or default to "default-user"
         USERNAME="${{ github.event.inputs.custom_username || 'default-user' }}"
-
-        # Define the path for the user's folder in the docs directory
         DOCS_FOLDER="docs/$USERNAME"
-
-        # Create the docs directory if it doesn't exist
         mkdir -p "$DOCS_FOLDER"
-        
-        # Move the newly generated ESLint report to the user's folder in docs/
+
         if [ -f "eslint-report.html" ]; then
           mv eslint-report.html "$DOCS_FOLDER/"
         else
@@ -83,13 +100,10 @@ jobs:
       run: |
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
-
-        # Add and commit the updated report to the repository
+        
         if [ -f "docs/${{ github.event.inputs.custom_username || 'default-user' }}/eslint-report.html" ]; then
           git add docs/${{ github.event.inputs.custom_username || 'default-user' }}/eslint-report.html
-          git commit -m "Update ESLint report for ${{ github.event.inputs.custom_username || 'default-user' }}"
-          
-          # Push the changes to the repository
+          git commit -m "Update ESLint report with Quality Score for ${{ github.event.inputs.custom_username || 'default-user' }}"
           git push origin main --force
         else
           echo "No report to commit. Skipping."
