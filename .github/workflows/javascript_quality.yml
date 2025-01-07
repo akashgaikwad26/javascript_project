@@ -127,7 +127,7 @@ jobs:
             \"userid\": \"$USER_ID\",
             \"clientpublic\": \"$CLIENT_PUBLIC\",
             \"clientsecret\": \"$CLIENT_SECRET\",
-            \"projectid\": \"$CLIENT_SECRET\",
+            \"projectid\": \"$PROJECT_ID\",
             \"recordtime\": \"$LAST_REQUEST_TIME\",
             \"quality\": \"${{ env.quality_score }}\",
              \"coverage\": \"${{ env.quality_score }}\"
