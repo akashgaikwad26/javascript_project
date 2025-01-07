@@ -13,12 +13,16 @@ on:
     paths:
       - '**/*.js'
 
-  workflow_dispatch:  # Allows manual triggering of the workflow
+  workflow_dispatch:
     inputs:
       custom_username:
         description: 'Enter custom username (default is "default-user")'
         required: false
         default: 'default-user'
+      project_id:
+        description: 'Enter project ID (default is "default-project")'
+        required: false
+        default: 'default-project'
 
 jobs:
   test:
@@ -76,8 +80,7 @@ jobs:
           USERNAME="${{ github.event.inputs.custom_username || 'default-user' }}"
           
           # Define the path for the user's folder in the docs directory
-          DOCS_FOLDER="docs/$USERNAME"
-
+          DOCS_FOLDER="docs/${USERNAME}/${PROJECT_ID}/code_coverage"
           # Create the docs folder if it doesn't exist
           mkdir -p "$DOCS_FOLDER"
 
@@ -110,16 +113,14 @@ jobs:
       - name: Call API to Insert Quality Score
         run: |
          API_URL="https://dolphin-app-uzion.ondigitalocean.app/api/setCoverage?clientpublic=baef7468287a44d8ac3634026d9fb8d1&clientsecret=181a2f3171117c1bd164c88b1171c1b83114fc1712121b12"
-         USER_ID="=Akash_javasript_coverage"
-         CLIENT_PUBLIC="baef7468287a44d8ac3634026d9fb8d1"
-         CLIENT_SECRET="181a2f3171117c1bd164c88b1171c1b83114fc1712121b12"
-         LAST_REQUEST_TIME="1733275263647"
-         projectid="C10180"
+         USER_ID="${{ github.event.inputs.custom_username || 'default-user' }}"
+         PROJECT_ID="${{ github.event.inputs.project_id || 'default-project' }}"
+         LAST_REQUEST_TIME="$(date +%s)000"
          curl -X POST "$API_URL" \
            -H "Content-Type: application/json" \
            -d "{
               \"userid\": \"$USER_ID\",
-              \"projectid\": \"$projectid\",
+              \"projectid\": \"$PROJECT_ID\",
               \"recordtime\": \"$LAST_REQUEST_TIME\",
               \"coverage\": \"${{ env.COVERAGE }}\"
             }"
