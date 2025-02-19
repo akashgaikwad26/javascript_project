@@ -23,11 +23,17 @@ on:
         description: 'Enter project ID (default is "default-project")'
         required: false
         default: 'default-project'
+      Url:
+        description: 'Enter URL (default is "https://dolphin-app-uzion.ondigitalocean.app/api")'
+        required: false
+        default: 'https://dolphin-app-uzion.ondigitalocean.app/api'
 
 jobs:
   test:
     name: Run Tests and Upload Coverage
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -68,8 +74,8 @@ jobs:
           # Extract the coverage percentage from the text summary
           COVERAGE=$(grep -oP 'All files.*?\K[0-9]+\.[0-9]+' coverage/lcov-report/index.html || echo "33")
           if [[ -z "$COVERAGE" ]]; then
-            echo "Coverage percentage not found, defaulting to 33%"
-            COVERAGE=33
+            echo "Coverage percentage not found, defaulting to 0%"
+            COVERAGE=0
           fi
           echo "Coverage Percentage: $COVERAGE%"
           echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
@@ -88,7 +94,7 @@ jobs:
           mv coverage/* "$DOCS_FOLDER/"
 
       - name: Upload Coverage Reports as Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-reports
           path: docs/${{ github.event.inputs.custom_username || 'default-user' }}/
@@ -112,7 +118,7 @@ jobs:
 
       - name: Call API to Insert Quality Score
         run: |
-         API_URL="https://dolphin-app-uzion.ondigitalocean.app/api/setCoverage?clientpublic=baef7468287a44d8ac3634026d9fb8d1&clientsecret=181a2f3171117c1bd164c88b1171c1b83114fc1712121b12"
+         API_URL="${{ github.event.inputs.Url}}/setCoverage?clientpublic=baef7468287a44d8ac3634026d9fb8d1&clientsecret=181a2f3171117c1bd164c88b1171c1b83114fc1712121b12"
          USER_ID="${{ github.event.inputs.custom_username || 'default-user' }}"
          PROJECT_ID="${{ github.event.inputs.project_id || 'default-project' }}"
          LAST_REQUEST_TIME="$(date +%s)000"
